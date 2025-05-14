@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafik Penghasilan Per Pemilik Usaha</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        
+        .chart-container {
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background-color: #f0f7ff;
+            border: 1px solid #cce5ff;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Grafik Penghasilan Per Pemilik Usaha</h1>
+        
+        <div class="control-panel">
+            <label for="owner-select">Pilih Pemilik Usaha:</label>
+            <select id="owner-select"></select>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="incomeChart"></canvas>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-title">Nilai Terendah</div>
+                <div id="min-value" class="stat-value">Rp 0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Nilai Tertinggi</div>
+                <div id="max-value" class="stat-value">Rp 0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Rata-rata</div>
+                <div id="mean-value" class="stat-value">Rp 0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Median</div>
+                <div id="median-value" class="stat-value">Rp 0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Modus</div>
+                <div id="mode-value" class="stat-value">Rp 0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">Total</div>
+                <div id="total-value" class="stat-value">Rp 0</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Data penghasilan usaha
+        const ownersData = [
+            {
+                name: "Deden",
+                data: [700000, 724000, 689000, 710000, 740000, 746000, 727000, 698000, 705000, 702000]
+            },
+            {
+                name: "Auf",
+                data: [300000, 347000, 298000, 341000, 300000, 297000, 299000, 300000, 325000, 302000]
+            },
+            {
+                name: "Gilang",
+                data: [300000, 340000, 312000, 300000, 297000, 318000, 302000, 346000, 300000, 296000]
+            },
+            {
+                name: "Naruni",
+                data: [900000, 923000, 896000, 905000, 912000, 890000, 932000, 915000, 940000, 921000]
+            },
+            {
+                name: "Jamal",
+                data: [600000, 614000, 600000, 620000, 600000, 590000, 587000, 640000, 632000, 600000]
+            },
+            {
+                name: "Andreas",
+                data: [900000, 890000, 924000, 913000, 942000, 890000, 878000, 901000, 918000, 923000]
+            },
+            {
+                name: "Wisnu",
+                data: [50000, 83000, 58000, 96000, 47000, 59000, 87000, 95000, 80000, 47000]
+            },
+            {
+                name: "Aprian",
+                data: [900000, 932000, 910000, 921000, 897000, 890000, 936000, 936000, 935000, 913000]
+            },
+            {
+                name: "Irma",
+                data: [1000000, 1013000, 989000, 1023000, 1038000, 990000, 987000, 1043000, 1027000, 1043000]
+            },
+            {
+                name: "Joko",
+                data: [1000000, 986000, 998000, 1002000, 1003000, 1012000, 1009000, 1010000, 1019000, 1000000]
+            },
+            {
+                name: "Erik",
+                data: [3000000, 3046000, 3007000, 3050000, 2970000, 3043000, 3000000, 2980000, 3000000, 2850000]
+            },
+            {
+                name: "Indriani",
+                data: [800000, 821000, 798000, 786000, 838000, 829000, 794000, 825000, 813000, 816000]
+            },
+            {
+                name: "Sebastian",
+                data: [1000000, 1001000, 1000000, 999000, 1000000, 998000, 1024000, 1023000, 1042000, 1021000]
+            },
+            {
+                name: "Musigit Prasetya",
+                data: [100000, 110000, 121000, 100000, 124000, 98000, 123000, 112000, 102000, 132000]
+            },
+            {
+                name: "Asep",
+                data: [1000000, 1021000, 1011000, 979000, 1023000, 1013000, 1034000, 1024000, 1014000, 1019000]
+            }
+        ];
+
+        // Fungsi untuk mencari modus dari array
+        function findMode(arr) {
+            const counts = {};
+            let maxCount = 0;
+            let modes = [];
+            
+            // Hitung frekuensi
+            arr.forEach(value => {
+                counts[value] = (counts[value] || 0) + 1;
+                if (counts[value] > maxCount) {
+                    maxCount = counts[value];
+                }
+            });
+            
+            // Temukan nilai dengan frekuensi tertinggi
+            for (const value in counts) {
+                if (counts[value] === maxCount) {
+                    modes.push(Number(value));
+                }
+            }
+            
+            // Jika tidak ada yang muncul lebih dari sekali, tidak ada modus
+            if (maxCount === 1) return "Tidak ada modus";
+            
+            return modes.length > 1 ? modes.join(", ") : modes[0];
+        }
+
+        // Fungsi untuk mencari median dari array
+        function findMedian(arr) {
+            const sortedArr = [...arr].sort((a, b) => a - b);
+            const mid = Math.floor(sortedArr.length / 2);
+            
+            return sortedArr.length % 2 !== 0 
+                ? sortedArr[mid] 
+                : (sortedArr[mid - 1] + sortedArr[mid]) / 2;
+        }
+
+        // Fungsi format ke Rupiah
+        function formatToRupiah(value) {
+            return `Rp ${value.toLocaleString('id-ID')}`;
+        }
+
+        // Inisialisasi select options
+        const ownerSelect = document.getElementById('owner-select');
+        
+        ownersData.forEach(owner => {
+            const option = document.createElement('option');
+            option.value = owner.name;
+            option.textContent = owner.name;
+            ownerSelect.appendChild(option);
+        });
+
+        // Inisialisasi chart
+        let myChart;
+        const ctx = document.getElementById('incomeChart').getContext('2d');
+
+        // Update statistik
+        function updateStats(ownerData) {
+            const data = ownerData.data;
+            const min = Math.min(...data);
+            const max = Math.max(...data);
+            const sum = data.reduce((a, b) => a + b, 0);
+            const mean = sum / data.length;
+            const median = findMedian(data);
+            const mode = findMode(data);
+            
+            document.getElementById('min-value').textContent = formatToRupiah(min);
+            document.getElementById('max-value').textContent = formatToRupiah(max);
+            document.getElementById('mean-value').textContent = formatToRupiah(Math.round(mean));
+            document.getElementById('median-value').textContent = formatToRupiah(median);
+            document.getElementById('mode-value').textContent = typeof mode === 'number' ? formatToRupiah(mode) : mode;
+            document.getElementById('total-value').textContent = formatToRupiah(sum);
+        }
+
+        // Update chart
+        function updateChart(ownerName) {
+            const ownerData = ownersData.find(owner => owner.name === ownerName);
+            const periods = Array.from({length: ownerData.data.length}, (_, i) => i + 1);
+            
+            // Hapus chart lama jika ada
+            if (myChart) {
+                myChart.destroy();
+            }
+            
+            // Buat chart baru
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: periods,
+                    datasets: [{
+                        label: `Penghasilan ${ownerData.name}`,
+                        data: ownerData.data,
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'Rp ' + value.toLocaleString('id-ID');
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Penghasilan (Rp)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Periode'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatToRupiah(context.raw);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update statistik
+            updateStats(ownerData);
+        }
+
+        // Event listener untuk select
+        ownerSelect.addEventListener('change', function() {
+            updateChart(this.value);
+        });
+
+        // Inisialisasi dengan pemilik pertama
+        updateChart(ownersData[0].name);
+    </script>
+</body>
+</html>
